@@ -1,3 +1,5 @@
+#include <Servo.h> 
+
 #define NOTE_B0  31
 #define NOTE_C1  33
 #define NOTE_CS1 35
@@ -89,11 +91,13 @@
 #define NOTE_DS8 4978
 #define REST      0
 
+Servo myservo;  // create servo object to control a servo
+
 int moisture_Sensor;
 unsigned long delay_time;
 const int ms_powerpin = 8;                     // this is the port number for the VCC to be connected too
 const unsigned long delay_watered = 43200000;            // a delay time of every 12 hours, this is after the plant has been watered.
-const int threshold = 750;                     // defining the threshold for the wetness of the soil
+const int threshold = 700;                     // defining the threshold for the wetness of the soil
 const unsigned long delay_watering = 100;                // this delay is for when the plant is being watered. 
 
 // change this to make the song slower or faster
@@ -141,10 +145,14 @@ int wholenote_doom= (60000 * 4) / tempo_doom;
 
 int divider = 0, noteDuration = 0;
 
+int pos = 0;    // variable to store the servo position
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(ms_powerpin, OUTPUT);
+
+  myservo.attach(3);   // Set PWM pin 3 for Servo motor 1
 }
 
 void loop() {
@@ -178,7 +186,18 @@ void loop() {
 
       // stop the waveform generation before the next note.
       noTone(buzzer);
+
+      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+        // in steps of 1 degree
+        myservo.write(pos);              // tell servo to go to position in variable 'pos'
+                          // waits 15ms for the servo to reach the position
+        }
+      for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        myservo.write(pos);              // tell servo to go to position in variable 'pos'
+                        // waits 15ms for the servo to reach the position
+      }
     }
+
 
     // set the delay_time as delay_watered
     delay_time = delay_watered;                // since the soil is still wet, we can come back and check in 12 hours. 
@@ -204,15 +223,22 @@ void loop() {
       // we only play the note for 90% of the duration, leaving 10% as a pause
       tone(buzzer, pgm_read_word_near(melody_doom+thisNote), noteDuration * 0.9);
 
+      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+        // in steps of 1 degree
+        myservo.write(pos);              // tell servo to go to position in variable 'pos'
+        }
+        for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        myservo.write(pos);              // tell servo to go to position in variable 'pos'
+                        // waits 15ms for the servo to reach the position
+      }
+
       // Wait for the specief duration before playing the next note.
       delay(noteDuration);
 
       // stop the waveform generation before the next note.
       noTone(buzzer);
+      Serial.print(moisture_Sensor);
     }
-
-    // make the servo motor move a bit, to make the plant shake, and seem as if it's withering or in pain 
-
     // set the delay time to be delay_watering
     delay_time = delay_watering;                // since the soil is still wet, we can come back and check in 12 hours
   }
